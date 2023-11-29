@@ -1,4 +1,4 @@
-name: 'tf deploy to azure'
+name: 'tf deploy to aws'
 
 on:
   push:
