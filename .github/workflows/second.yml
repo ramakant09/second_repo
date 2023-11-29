@@ -1,10 +1,76 @@
-name: myfirst_workflow
-on: workflow_dispatch
+name: 'tf deploy to azure'
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+  workflow_dispatch:
+    
+
+env:
+  access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
 jobs:
-  first-job:
+  terraform_plan:
+    name: 'Terraform plan'
     runs-on: ubuntu-latest
+   
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
     steps:
-    - name: print greeting
-      run: echo "Hello, world" 
-    - name: print end
-      run: echo "Good-bye"
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+     
+   
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan
+
+
+  terraform_apply:
+    name: 'Terraform apply'
+    runs-on: ubuntu-latest
+    needs: [terraform_plan]
+      
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+    
+   
+    # Generates an execution plan for Terraform
+    - name: Terraform apply
+      run: terraform apply --auto-approve
+     
